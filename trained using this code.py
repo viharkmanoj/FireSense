@@ -2,10 +2,10 @@ from ultralytics import YOLO
 import cv2
 
 # Load your trained YOLO model
-model = YOLO("/Users/manojvihar/Developer/Fire/runs/detect/train/weights/best.pt")  # change path if needed
+model = YOLO("/Users/manojvihar/Developer/Fire/train/weights/best.pt")  # change path if needed
 
 # Input video path
-video_path = "/Users/manojvihar/Downloads/Burned in a few minutes।।  When the house caught fire।। CCTV Footage।।.mp4"  # replace with your video file
+video_path = "/Users/manojvihar/Desktop/small to big fire.mp4"  # replace with your video file
 
 # Open the video file
 cap = cv2.VideoCapture(video_path)
