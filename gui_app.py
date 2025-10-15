@@ -4,6 +4,7 @@ from PyQt5.QtGui import QFont, QImage, QPixmap
 from ultralytics import YOLO
 import cv2
 import sys
+import numpy as np
 
 # -------------------- Load YOLO model --------------------
 model = YOLO("/Users/manojvihar/Developer/Fire/runs/detect/train/weights/best.pt")
@@ -97,21 +98,41 @@ def process_frame():
 
     # YOLO inference
     results = model(frame)
-    annotated_frame = results[0].plot()
+
+    # Draw bounding boxes with blue box and blue label background with white text
+    for result in results:
+        boxes = result.boxes.xyxy.cpu().numpy()
+        for box in boxes:
+            x1, y1, x2, y2 = map(int, box)
+            # Draw blue rectangle
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
+
+            # Label text and background
+            label = "Fire"
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            font_scale = 1.5
+            font_thickness = 3
+            (text_width, text_height), baseline = cv2.getTextSize(label, font, font_scale, font_thickness)
+
+            # Draw filled rectangle for text background (blue)
+            cv2.rectangle(frame, (x1, y1 - text_height - baseline - 5), (x1 + text_width + 5, y1), (255, 0, 0), -1)
+
+            # Put white text over blue background
+            cv2.putText(frame, label, (x1 + 2, y1 - 5), font, font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)
 
     # Convert to QImage
-    frame_rgb = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
+    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     h, w, ch = frame_rgb.shape
     bytes_per_line = ch * w
     qimg = QImage(frame_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888)
 
-    # Scale to current QLabel size (keeps aspect ratio)
+    # Scale to QLabel
     pixmap = QPixmap.fromImage(qimg)
     screen_width = screen.width()
     screen_height = screen.height()
     screen.setPixmap(pixmap.scaled(screen_width, screen_height, Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
-# Connect timer once
+# Connect timer
 timer.timeout.connect(process_frame)
 
 # -------------------- Upload Video --------------------
@@ -129,7 +150,7 @@ def upload_video():
         if cap:
             cap.release()
         cap = cv2.VideoCapture(file_path)
-        fps = cap.get(cv2.CAP_PROP_FPS) or 30  # fallback if FPS is 0
+        fps = cap.get(cv2.CAP_PROP_FPS) or 30
         timer.start(int(1000 / fps))
 
 # -------------------- Use Camera --------------------
@@ -137,7 +158,7 @@ def use_camera():
     global cap, timer
     if cap:
         cap.release()
-    cap = cv2.VideoCapture(0)  # Built-in camera
+    cap = cv2.VideoCapture(0)
     fps = 30
     timer.start(int(1000 / fps))
 
@@ -163,7 +184,7 @@ def reset_screen():
     screen.clear()
     screen.setStyleSheet("background-color: black; border: 2px solid #333; border-radius: 10px;")
 
-# -------------------- Buttons --------------------
+# -------------------- Button Connections --------------------
 btn_upload.clicked.connect(upload_video)
 btn_cam.clicked.connect(use_camera)
 btn_ip.clicked.connect(enter_ip)
