@@ -5,7 +5,7 @@ from ultralytics import YOLO
 import cv2
 import sys
 
-# -------------------- Load YOLO model --------------------
+# -------------------- AI model --------------------
 model = YOLO("/Users/manojvihar/Developer/Fire/runs/detect/train/weights/best.pt")
 
 # -------------------- App --------------------
